@@ -5,6 +5,33 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import permission_required
 from .models import Book
 
+from django.shortcuts import render
+from django.db.models import Q
+from .models import Book
+from .forms import BookForm
+
+
+def book_list(request):
+    query = request.GET.get("q", "")
+
+    # Safe ORM filtering (parameterized by Django)
+    books = Book.objects.filter(
+        Q(title__icontains=query) | Q(author__icontains=query)
+    )
+
+    return render(request, "bookshelf/book_list.html", {"books": books})
+
+
+def create_book(request):
+    if request.method == "POST":
+        form = BookForm(request.POST)
+        if form.is_valid():  # Input validation
+            form.save()
+    else:
+        form = BookForm()
+
+    return render(request, "bookshelf/form_example.html", {"form": form})
+
 
 @permission_required("relationship_app.can_view", raise_exception=True)
 def book_list(request):
